@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Folder Downloader</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-white shadow-xl rounded-lg p-6">
+                <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">
+                    GitHub Folder Downloader
+                </h1>
+
+                <div class="space-y-6">
+                    <div class="flex flex-col space-y-2">
+                        <label for="url" class="text-sm font-medium text-gray-700">
+                            GitHub Folder URL
+                        </label>
+                        <div class="flex space-x-4">
+                            <input type="text" id="url"
+                                placeholder="https://github.com/user/repo/tree/main/folder"
+                                class="flex-1 min-w-0 block w-full px-3 py-2 rounded-md border border-gray-300">
+                            <button onclick="handleDownload()" id="downloadBtn"
+                                class="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                                Download
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="progress" class="hidden">
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="progressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="error" class="hidden rounded-md bg-red-50 p-4">
+                        <div class="flex">
+                            <div class="text-sm text-red-700" id="errorText"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-md">
+                        <h2 class="text-lg font-medium text-gray-900 mb-2">Instructions</h2>
+                        <ul class="list-disc pl-5 text-sm text-gray-600 space-y-2">
+                            <li>Enter a GitHub folder URL</li>
+                            <li>You can also append <code>?url=...</code> to this page's URL</li>
+                            <li>The folder will be downloaded as a zip file</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check for URL parameter on load
+        window.addEventListener('load', () => {
+            const params = new URLSearchParams(window.location.search);
+            const urlParam = params.get('url');
+            if (urlParam) {
+                document.getElementById('url').value = urlParam;
+                handleDownload();
+            }
+        });
+
+        async function handleDownload() {
+            const urlInput = document.getElementById('url');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const progress = document.getElementById('progress');
+            const progressBar = document.getElementById('progressBar');
+            const error = document.getElementById('error');
+            const errorText = document.getElementById('errorText');
+
+            // Reset UI
+            error.classList.add('hidden');
+            progress.classList.remove('hidden');
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = 'Downloading...';
+            progressBar.style.width = '0%';
+
+            try {
+                const url = urlInput.value;
+                const { owner, repo, path, branch } = parseGithubUrl(url);
+                const zip = new JSZip();
+
+                // Fetch folder contents
+                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`);
+                if (!response.ok) throw new Error('Failed to fetch folder contents');
+                const contents = await response.json();
+
+                let processed = 0;
+                const total = countFiles(contents);
+
+                await processContents(contents, '', {
+                    owner,
+                    repo,
+                    branch,
+                    zip,
+                    onProgress: () => {
+                        processed++;
+                        const percentage = (processed / total) * 100;
+                        progressBar.style.width = percentage + '%';
+                    }
+                });
+
+                // Generate and download zip
+                const blob = await zip.generateAsync({ type: 'blob' });
+                saveAs(blob, `${path.split('/').pop() || repo}.zip`);
+
+                // Reset UI
+                downloadBtn.textContent = 'Download';
+                downloadBtn.disabled = false;
+                progress.classList.add('hidden');
+
+            } catch (err) {
+                errorText.textContent = err.message;
+                error.classList.remove('hidden');
+                downloadBtn.textContent = 'Download';
+                downloadBtn.disabled = false;
+                progress.classList.add('hidden');
+            }
+        }
+
+        function parseGithubUrl(url) {
+            try {
+                const match = url.match(/github\.com\/([^/]+)\/([^/]+)(?:\/tree\/([^/]+))?(?:\/(.+))?/);
+                if (!match) throw new Error('Invalid GitHub URL');
+
+                return {
+                    owner: match[1],
+                    repo: match[2],
+                    branch: match[3] || 'main',
+                    path: match[4] || ''
+                };
+            } catch (error) {
+                throw new Error('Invalid GitHub URL');
+            }
+        }
+
+        function countFiles(contents) {
+            return Array.isArray(contents) ? 
+                contents.filter(item => item.type === 'file').length :
+                (contents.type === 'file' ? 1 : 0);
+        }
+
+        async function processContents(contents, currentPath, options) {
+            const items = Array.isArray(contents) ? contents : [contents];
+
+            for (const item of items) {
+                if (item.type === 'file') {
+                    const response = await fetch(item.download_url);
+                    const blob = await response.blob();
+                    options.zip.file(currentPath + item.name, blob);
+                    options.onProgress();
+                } else if (item.type === 'dir') {
+                    const response = await fetch(
+                        `https://api.github.com/repos/${options.owner}/${options.repo}/contents/${item.path}?ref=${options.branch}`
+                    );
+                    const contents = await response.json();
+                    await processContents(contents, currentPath + item.name + '/', options);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
