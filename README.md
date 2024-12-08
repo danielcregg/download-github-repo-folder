@@ -1,1 +1,1 @@
-# download-github-repo-folder
+# GitHub Folder Downloader
