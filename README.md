@@ -26,11 +26,12 @@ Visit the live version: [GitHub Folder Downloader](https://danielcregg.github.io
 ## 💡 Usage
 
 1. **Basic Usage**:
+   Go to the below link and paste in the URL to the folder you wish to download.
    ```
-   [https://your-url.com/index.html](https://danielcregg.github.io/github-folder-downloader/)
+   https://danielcregg.github.io/github-folder-downloader/
    ```
 
-2. **With URL Parameter**:
+3. **With URL Parameter**:
    ```
    https://danielcregg.github.io/github-folder-downloader/?url=https://github.com/user/repo/tree/main/folder
    ```
