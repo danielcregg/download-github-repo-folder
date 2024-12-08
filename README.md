@@ -27,12 +27,12 @@ Visit the live version: [GitHub Folder Downloader](https://danielcregg.github.io
 
 1. **Basic Usage**:
    ```
-   https://your-url.com/index.html
+   [https://your-url.com/index.html](https://danielcregg.github.io/github-folder-downloader/)
    ```
 
 2. **With URL Parameter**:
    ```
-   https://your-url.com/index.html?url=https://github.com/user/repo/tree/main/folder
+   https://danielcregg.github.io/github-folder-downloader/?url=https://github.com/user/repo/tree/main/folder
    ```
 
 ## 🔧 Technical Details
