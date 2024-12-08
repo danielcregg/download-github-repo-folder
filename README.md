@@ -1,6 +1,6 @@
 # 📂 GitHub Folder Downloader
 
-![GitHub folder downloader preview](preview.png)
+[GitHub Folder Downloader](https://danielcregg.github.io/github-folder-downloader)
 
 A sleek, modern web application that allows you to download any folder from a GitHub repository without cloning the entire repo. Built with vanilla JavaScript and modern web technologies, this tool provides a seamless experience for developers who need quick access to specific GitHub folders.
 
@@ -16,7 +16,7 @@ A sleek, modern web application that allows you to download any folder from a Gi
 ## 🚀 Quick Start
 
 ### Option 1: Direct Use
-Visit the live version: [GitHub Folder Downloader](https://your-username.github.io/github-folder-downloader)
+Visit the live version: [GitHub Folder Downloader](https://danielcregg.github.io/github-folder-downloader)
 
 ### Option 2: Self-Host
 1. Download the `index.html` file
