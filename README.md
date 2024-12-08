@@ -80,12 +80,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - All contributors and users of this tool
 
 ---
-
-<p align="center">
-  Made with ❤️ by <a href="https://github.com/your-username">your-username</a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/your-username/github-folder-downloader/issues">Report Bug</a> ·
-  <a href="https://github.com/your-username/github-folder-downloader/issues">Request Feature</a>
-</p>
